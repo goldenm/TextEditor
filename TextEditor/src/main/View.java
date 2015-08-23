@@ -2,9 +2,14 @@ package main;
 
 import java.awt.BorderLayout;
 import java.awt.Font;
+import java.awt.event.ActionEvent;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ActionMap;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -12,7 +17,10 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JToolBar;
+import javax.swing.filechooser.FileSystemView;
+import javax.swing.text.DefaultEditorKit;
 
+@SuppressWarnings({ "serial", "unused" })
 public class View {
 
 	private Controller controller;
@@ -20,85 +28,138 @@ public class View {
 	public View(final Controller controller){
 		this.controller = controller;
 		
+		JFileChooser dialog = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
+		
 		JFrame frame = new JFrame(TextEditor.APPNAME);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		JPanel panel = (JPanel) frame.getContentPane();
 		panel.setLayout(new BorderLayout());
 		
+		//Text Area
+		JTextArea area = new JTextArea(40, 135);
+		area.setFont(new Font("Monospaced", Font.PLAIN, 12));
+		area.setWrapStyleWord(true);
+		area.setLineWrap(true);
+		
+		JScrollPane scrollPane = new JScrollPane(area, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		
+		ActionMap am = area.getActionMap();
+		
+		//Actions
+		Action newAction = new AbstractAction("New", new ImageIcon("img/new-icon.png")){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("New fired.");
+				controller.newEvent();
+			}
+		};
+		
+		Action openAction = new AbstractAction("Open", new ImageIcon("img/open-icon.png")){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("Open fired.");
+				
+				//Check for whether save is needed?
+				if(dialog.showOpenDialog(null)==JFileChooser.APPROVE_OPTION) {
+					controller.openEvent(dialog.getSelectedFile().getName());
+				}
+			}
+		};
+		
+		Action saveAction = new AbstractAction("Save", new ImageIcon("img/save-icon.png")){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("Save fired.");
+				controller.saveEvent();
+			}
+		};
+		
+		Action saveAsAction = new AbstractAction("SaveAs", new ImageIcon("img/save-icon.png")){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("SaveAs fired.");
+				controller.saveEvent();
+			}
+		};
+		
+		Action quitAction = new AbstractAction("Quit"){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				//Check for whether save is needed
+				System.exit(0);
+			}
+		};
+		
+		Action cutAction = am.get(DefaultEditorKit.cutAction);
+		cutAction.putValue(Action.SMALL_ICON, new ImageIcon("img/cut-icon.png"));
+		
+		Action copyAction =  am.get(DefaultEditorKit.copyAction);
+		copyAction.putValue(Action.SMALL_ICON, new ImageIcon("img/copy-icon.png"));
+		
+		Action pasteAction =  am.get(DefaultEditorKit.pasteAction);
+		pasteAction.putValue(Action.SMALL_ICON, new ImageIcon("img/paste-icon.png"));
+		
+		Action aboutAction = new AbstractAction("About TextEditor", new ImageIcon("img/coffee-icon.png")){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("About fired.");
+			}
+		};
+		
 		//MenuBar
 		JMenuBar menuBar = new JMenuBar();
 		JMenu fileMenu = new JMenu("File");
-		fileMenu.add("New");
-		fileMenu.add("Open");
-		fileMenu.add("Save");
-		fileMenu.add("Save As");
+		fileMenu.add(newAction);
+		fileMenu.add(openAction);
+		fileMenu.add(saveAction);
+		fileMenu.add(saveAsAction);
 		fileMenu.addSeparator();
-		fileMenu.add("Quit");
+		fileMenu.add(quitAction);
 		menuBar.add(fileMenu);
 		
 		JMenu editMenu = new JMenu("Edit");
-		editMenu.add("Cut");
-		editMenu.add("Copy");
-		editMenu.add("Paste");
+		editMenu.add(cutAction);
+		editMenu.add(copyAction);
+		editMenu.add(pasteAction);
 		menuBar.add(editMenu);
 		
 		JMenu helpMenu = new JMenu("Help");
-		helpMenu.add("About TextEditor");
+		helpMenu.add(aboutAction);
 		menuBar.add(helpMenu);
 		
 		//ToolBar
 		JToolBar toolBar = new JToolBar();
 		JButton newBtn = new JButton();
-		newBtn.setText(null);
-		newBtn.setIcon(new ImageIcon("img/new-icon.png"));
-		toolBar.add(newBtn);
+		toolBar.add(newAction);
 		
-		JButton loadBtn = new JButton();
-		loadBtn.setText(null);
-		loadBtn.setIcon(new ImageIcon("img/load-icon.png"));
-		toolBar.add(loadBtn);
+		JButton openBtn = new JButton();
+		toolBar.add(openAction);
 		
 		JButton saveBtn = new JButton();
-		saveBtn.setText(null);
-		saveBtn.setIcon(new ImageIcon("img/save-icon.png"));
-		toolBar.add(saveBtn);
+		toolBar.add(saveAction);
 		
 		toolBar.addSeparator();
 		
 		JButton cutBtn = new JButton();
-		cutBtn.setText(null);
-		cutBtn.setIcon(new ImageIcon("img/cut-icon.png"));
-		toolBar.add(cutBtn);
+		toolBar.add(cutAction);
 		
 		JButton copyBtn = new JButton();
-		copyBtn.setText(null);
-		copyBtn.setIcon(new ImageIcon("img/copy-icon.png"));
-		toolBar.add(copyBtn);
+		toolBar.add(copyAction);
 		
 		JButton pasteBtn = new JButton();
-		pasteBtn.setText(null);
-		pasteBtn.setIcon(new ImageIcon("img/paste-icon.png"));
-		toolBar.add(pasteBtn);
+		toolBar.add(pasteAction);
 		
 		toolBar.addSeparator();
 		
 		JButton coffeeBtn = new JButton();
-		coffeeBtn.setText(null);
-		coffeeBtn.setIcon(new ImageIcon("img/coffee-icon.png"));
-		toolBar.add(coffeeBtn);
-		
-		//Text Area
-		JTextArea area = new JTextArea(40, 135);
-		area.setFont(new Font("Monospaced", Font.PLAIN, 12));
-		
-		//TODO: sort out word wrap
-		JScrollPane scrollPane = new JScrollPane(area, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+		toolBar.add(aboutAction);
 		
 		panel.add(toolBar, BorderLayout.NORTH);
-		panel.add(scrollPane, BorderLayout.SOUTH);
+		panel.add(scrollPane, BorderLayout.CENTER);
 		frame.setJMenuBar(menuBar);
 		frame.pack();
 		frame.setVisible(true);
+		area.requestFocus();
 	}
 }
