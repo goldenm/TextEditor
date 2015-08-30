@@ -13,6 +13,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -31,12 +32,14 @@ public class View {
 	private JFrame frame;
 	private JTextArea area;
 	
+	private boolean modified;
+	
 	public View(final Controller controller){
 		this.controller = controller;
+		modified = false;
 		
 		final JFileChooser dialog = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
-		final FileFilter textFilter = new FileNameExtensionFilter(".txt", "txt");
-		dialog.addChoosableFileFilter(textFilter);
+		dialog.addChoosableFileFilter(new FileNameExtensionFilter(".txt", "txt"));
 		dialog.setAcceptAllFileFilterUsed(false);
 		
 		frame = new JFrame(TextEditor.APPNAME + " - " + fileName);
@@ -67,9 +70,7 @@ public class View {
 		Action openAction = new AbstractAction("Open", new ImageIcon("img/open-icon.png")){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("Open fired.");
-				
-				//Check for whether save is needed?
+				checkSave();
 				if(dialog.showOpenDialog(panel)==JFileChooser.APPROVE_OPTION) {
 					controller.openEvent(dialog.getSelectedFile().getPath(), dialog.getSelectedFile().getName());
 				}
@@ -79,8 +80,14 @@ public class View {
 		Action saveAction = new AbstractAction("Save", new ImageIcon("img/save-icon.png")){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("Save fired.");
-				controller.saveEvent();
+				if(controller.fileExists()){
+					controller.saveEvent();
+				}
+				else{
+					if(dialog.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION){
+						controller.saveAsEvent(area.getText(), dialog.getSelectedFile().getAbsolutePath() + ".txt");
+					}
+				}
 			}
 		};
 		
@@ -172,8 +179,29 @@ public class View {
 		area.requestFocus();
 	}
 	
+	public void checkSave(){
+		if(modified){
+			
+			if(JOptionPane.showConfirmDialog(frame, "Would you like to save " + fileName + "?", "Save?", JOptionPane.YES_NO_CANCEL_OPTION) == JOptionPane.YES_OPTION){
+				
+			}
+			
+//			int option  = JOptionPane.showConfirmDialog(frame, "Would you like to save " + fileName + "?", "Save?", JOptionPane.YES_NO_CANCEL_OPTION);			
+//			switch(option){
+//				case JOptionPane.YES_OPTION:
+//					System.out.println("YEAH!");
+//					break;
+//				case JOptionPane.NO_OPTION:
+//					System.out.println("Hell, no!");
+//					break;
+//			}
+		}
+	}
+	
+	
 	public void updateView(String content, String fileName){
 		area.setText(content);
 		frame.setTitle(TextEditor.APPNAME + " - " + fileName);
+		modified = false;
 	}
 }

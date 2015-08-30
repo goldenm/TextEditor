@@ -11,11 +11,14 @@ public class FileManager {
 	private Controller controller;
 	private BufferedReader br;
 	private FileWriter fw;
+	private String filePath;
 	
 	public FileManager(Controller controller){
 		this.controller = controller;
+		filePath = null;
 	}
 	
+	//TODO: User-friendlier exception handling 
 	public void openFile(String filePath, String fileName){
 		StringBuilder content = new StringBuilder();
 		String tempString;
@@ -28,7 +31,7 @@ public class FileManager {
 			}
 			
 			controller.loadFile(content.toString(), fileName);
-			
+			this.filePath = filePath;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -45,5 +48,18 @@ public class FileManager {
 	
 	public void saveFile(){
 		
+	}
+	
+	public void saveAsFile(String content, String filePath){
+		
+	}
+	
+	public boolean fileExists(){
+		if(filePath == null){
+			return false;
+		}
+		else{
+			return true;
+		}
 	}
 }

@@ -26,6 +26,14 @@ public class Controller {
 	}
 	
 	public void saveEvent(){
-		System.out.println("Controller logging saveEvent.");
+		
+	}
+	
+	public void saveAsEvent(String content, String filePath){
+		fileManager.saveAsFile(content, filePath);
+	}
+	
+	public boolean fileExists(){
+		return fileManager.fileExists();
 	}
 }
