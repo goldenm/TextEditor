@@ -17,6 +17,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JToolBar;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileSystemView;
 import javax.swing.text.DefaultEditorKit;
 
@@ -24,20 +26,27 @@ import javax.swing.text.DefaultEditorKit;
 public class View {
 
 	private Controller controller;
+	private String fileName = "Untitled";
+	
+	private JFrame frame;
+	private JTextArea area;
 	
 	public View(final Controller controller){
 		this.controller = controller;
 		
-		JFileChooser dialog = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
+		final JFileChooser dialog = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
+		final FileFilter textFilter = new FileNameExtensionFilter(".txt", "txt");
+		dialog.addChoosableFileFilter(textFilter);
+		dialog.setAcceptAllFileFilterUsed(false);
 		
-		JFrame frame = new JFrame(TextEditor.APPNAME);
+		frame = new JFrame(TextEditor.APPNAME + " - " + fileName);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		JPanel panel = (JPanel) frame.getContentPane();
 		panel.setLayout(new BorderLayout());
 		
 		//Text Area
-		JTextArea area = new JTextArea(40, 135);
+		area = new JTextArea(40, 135);
 		area.setFont(new Font("Monospaced", Font.PLAIN, 12));
 		area.setWrapStyleWord(true);
 		area.setLineWrap(true);
@@ -61,8 +70,8 @@ public class View {
 				System.out.println("Open fired.");
 				
 				//Check for whether save is needed?
-				if(dialog.showOpenDialog(null)==JFileChooser.APPROVE_OPTION) {
-					controller.openEvent(dialog.getSelectedFile().getName());
+				if(dialog.showOpenDialog(panel)==JFileChooser.APPROVE_OPTION) {
+					controller.openEvent(dialog.getSelectedFile().getPath(), dialog.getSelectedFile().getName());
 				}
 			}
 		};
@@ -161,5 +170,10 @@ public class View {
 		frame.pack();
 		frame.setVisible(true);
 		area.requestFocus();
+	}
+	
+	public void updateView(String content, String fileName){
+		area.setText(content);
+		frame.setTitle(TextEditor.APPNAME + " - " + fileName);
 	}
 }
