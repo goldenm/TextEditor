@@ -74,6 +74,7 @@ public class View {
 				if(dialog.showOpenDialog(panel)==JFileChooser.APPROVE_OPTION) {
 					controller.openEvent(dialog.getSelectedFile().getPath(), dialog.getSelectedFile().getName());
 				}
+				modified = false;
 			}
 		};
 		
@@ -81,11 +82,13 @@ public class View {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(controller.fileExists()){
-					controller.saveEvent();
+					controller.saveEvent(area.getText());
+					modified = false;
 				}
 				else{
 					if(dialog.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION){
-						controller.saveAsEvent(area.getText(), dialog.getSelectedFile().getAbsolutePath() + ".txt");
+						controller.saveAsEvent(area.getText(), dialog.getSelectedFile().getAbsolutePath());
+						modified = false;
 					}
 				}
 			}
@@ -94,8 +97,10 @@ public class View {
 		Action saveAsAction = new AbstractAction("SaveAs", new ImageIcon("img/save-icon.png")){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("SaveAs fired.");
-				controller.saveEvent();
+				if(dialog.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION){
+					controller.saveAsEvent(area.getText(), dialog.getSelectedFile().getAbsolutePath());
+					modified = false;
+				}
 			}
 		};
 		

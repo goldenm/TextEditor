@@ -25,8 +25,8 @@ public class Controller {
 		view.updateView(content, fileName);
 	}
 	
-	public void saveEvent(){
-		
+	public void saveEvent(String content){
+		fileManager.saveFile(content);
 	}
 	
 	public void saveAsEvent(String content, String filePath){

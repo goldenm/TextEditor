@@ -1,17 +1,22 @@
 package main;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 
 @SuppressWarnings("unused")
 public class FileManager {
 
 	private Controller controller;
 	private BufferedReader br;
-	private FileWriter fw;
+	private PrintWriter pw;
 	private String filePath;
+	
+	private BufferedWriter writer;
 	
 	public FileManager(Controller controller){
 		this.controller = controller;
@@ -46,11 +51,34 @@ public class FileManager {
 		}
 	}
 	
-	public void saveFile(){
+	public void saveFile(String content){
 		
 	}
 	
 	public void saveAsFile(String content, String filePath){
+		try {
+//			pw = new PrintWriter(filePath + ".txt");
+//			pw.println(content);
+			
+			writer = new BufferedWriter(new FileWriter(filePath));
+		    writer.write(content);
+		    
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally{
+//			if(pw != null){
+//				pw.close();
+//			}
+			
+			if(writer != null){
+				try {
+					writer.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		
 	}
 	
