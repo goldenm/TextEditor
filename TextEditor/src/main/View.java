@@ -3,6 +3,9 @@ package main;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -32,14 +35,15 @@ public class View {
 	private JFrame frame;
 	private JTextArea area;
 	private JScrollPane scrollPane;
+	private JFileChooser dialog;
+	private Action saveAction, saveAsAction;
 	
 	private boolean modified;
 	
 	public View(final Controller controller){
 		this.controller = controller;
-		modified = false;
 		
-		final JFileChooser dialog = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
+		dialog = new JFileChooser(FileSystemView.getFileSystemView().getDefaultDirectory());
 		dialog.addChoosableFileFilter(new FileNameExtensionFilter(".txt", "txt"));
 		dialog.setAcceptAllFileFilterUsed(false);
 		
@@ -49,7 +53,7 @@ public class View {
 		JPanel panel = (JPanel) frame.getContentPane();
 		panel.setLayout(new BorderLayout());
 		
-		//Text Area
+		// Text Area
 		area = new JTextArea(40, 135);
 		area.setFont(new Font("Monospaced", Font.PLAIN, 12));
 		area.setWrapStyleWord(true);
@@ -57,7 +61,7 @@ public class View {
 		scrollPane = new JScrollPane(area, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		ActionMap am = area.getActionMap();
 		
-		//Actions
+		// Actions
 		Action newAction = new AbstractAction("New", new ImageIcon("img/new-icon.png")){
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -69,37 +73,38 @@ public class View {
 		Action openAction = new AbstractAction("Open", new ImageIcon("img/open-icon.png")){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				checkSave();
-				if(dialog.showOpenDialog(panel)==JFileChooser.APPROVE_OPTION) {
-					controller.openEvent(dialog.getSelectedFile().getPath(), dialog.getSelectedFile().getName());
-				}
-				modified = false;
-			}
-		};
-		
-		Action saveAction = new AbstractAction("Save", new ImageIcon("img/save-icon.png")){
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if(controller.fileExists()){
-					controller.saveEvent(area.getText());
-					modified = false;
-				}
-				else{
-					//TODO- If you load a file and open a new one, the filename still appears in the dialog when you save
-					if(dialog.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION){
-						controller.saveAsEvent(area.getText(), dialog.getSelectedFile().getAbsolutePath());
-						modified = false;
+				if(checkSaveHandled()){
+					if(dialog.showOpenDialog(panel)==JFileChooser.APPROVE_OPTION) {
+						controller.openEvent(dialog.getSelectedFile().getPath(), dialog.getSelectedFile().getName());
+						setModified(false);
 					}
 				}
 			}
 		};
 		
-		Action saveAsAction = new AbstractAction("SaveAs", new ImageIcon("img/save-icon.png")){
+		saveAction = new AbstractAction("Save", new ImageIcon("img/save-icon.png")){
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(controller.fileExists()){
+					controller.saveEvent(area.getText());
+					setModified(false);
+				}
+				else{
+					//TODO- If you load a file and open a new one, the filename still appears in the dialog when you save
+					if(dialog.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION){
+						controller.saveAsEvent(area.getText(), dialog.getSelectedFile().getAbsolutePath());
+						setModified(false);
+					}
+				}
+			}
+		};
+		
+		saveAsAction = new AbstractAction("SaveAs", new ImageIcon("img/save-icon.png")){
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(dialog.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION){
 					controller.saveAsEvent(area.getText(), dialog.getSelectedFile().getAbsolutePath());
-					modified = false;
+					setModified(false);
 				}
 			}
 		};
@@ -107,8 +112,9 @@ public class View {
 		Action quitAction = new AbstractAction("Quit"){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				//Check for whether save is needed
-				System.exit(0);
+				if(checkSaveHandled()){
+					System.exit(0);
+				}
 			}
 		};
 		
@@ -125,10 +131,29 @@ public class View {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				//TODO - Implement this
+				JOptionPane.showMessageDialog(frame,
+					    "TextEditor -- a simple text editor implemented in Java\n" +
+					    		"Author \t Matt Golden\nReleased under The MIT License (MIT)",
+					    "About TextEditor",
+					    JOptionPane.INFORMATION_MESSAGE);
 			}
 		};
 		
-		//MenuBar
+		setModified(false);
+		
+		// KeyListener to update modified boolean
+		KeyListener keyListener = new KeyAdapter(){
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				super.keyPressed(e);
+				setModified(true);
+			}
+		};
+		
+		area.addKeyListener(keyListener);
+		
+		// MenuBar
 		JMenuBar menuBar = new JMenuBar();
 		JMenu fileMenu = new JMenu("File");
 		fileMenu.add(newAction);
@@ -184,21 +209,26 @@ public class View {
 		area.requestFocus();
 	}
 	
-	public void checkSave(){
+	public boolean checkSaveHandled(){
 		if(modified){
-			
-			if(JOptionPane.showConfirmDialog(frame, "Would you like to save " + fileName + "?", "Save?", JOptionPane.YES_NO_CANCEL_OPTION) == JOptionPane.YES_OPTION){
-				
+			switch(JOptionPane.showConfirmDialog(frame, "Would you like to save " + fileName + "?", "Save?", JOptionPane.YES_NO_CANCEL_OPTION)) {
+			case JOptionPane.YES_OPTION:	if(controller.fileExists()){
+												controller.saveEvent(area.getText());
+												setModified(false);
+												return true;
+											}
+											else{
+												if(dialog.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION){
+													controller.saveAsEvent(area.getText(), dialog.getSelectedFile().getAbsolutePath());
+													setModified(false);
+													return true;
+												}
+											}
+			case JOptionPane.NO_OPTION:		return true;
+			case JOptionPane.CANCEL_OPTION:	return false;
 			}
-			
-//			int option  = JOptionPane.showConfirmDialog(frame, "Would you like to save " + fileName + "?", "Save?", JOptionPane.YES_NO_CANCEL_OPTION);			
-//			switch(option){
-//				case JOptionPane.YES_OPTION:
-//					break;
-//				case JOptionPane.NO_OPTION:
-//					break;
-//			}
 		}
+		return true;
 	}
 	
 	private void newTextArea(){
@@ -212,5 +242,13 @@ public class View {
 		area.setText(content);
 		frame.setTitle(TextEditor.APPNAME + " - " + fileName);
 		modified = false;
+	}
+	
+	// No getter for modified.  It's fine being an inaccessible member of
+	// this class because no other class needs to use it yet.
+	public void setModified(boolean modified){
+		saveAction.setEnabled(modified);
+		saveAsAction.setEnabled(modified);
+		this.modified = modified;
 	}
 }
