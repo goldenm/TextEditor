@@ -31,6 +31,7 @@ public class View {
 	
 	private JFrame frame;
 	private JTextArea area;
+	private JScrollPane scrollPane;
 	
 	private boolean modified;
 	
@@ -53,16 +54,14 @@ public class View {
 		area.setFont(new Font("Monospaced", Font.PLAIN, 12));
 		area.setWrapStyleWord(true);
 		area.setLineWrap(true);
-		
-		JScrollPane scrollPane = new JScrollPane(area, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-		
+		scrollPane = new JScrollPane(area, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		ActionMap am = area.getActionMap();
 		
 		//Actions
 		Action newAction = new AbstractAction("New", new ImageIcon("img/new-icon.png")){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("New fired.");
+				newTextArea();
 				controller.newEvent();
 			}
 		};
@@ -86,6 +85,7 @@ public class View {
 					modified = false;
 				}
 				else{
+					//TODO- If you load a file and open a new one, the filename still appears in the dialog when you save
 					if(dialog.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION){
 						controller.saveAsEvent(area.getText(), dialog.getSelectedFile().getAbsolutePath());
 						modified = false;
@@ -124,7 +124,7 @@ public class View {
 		Action aboutAction = new AbstractAction("About TextEditor", new ImageIcon("img/coffee-icon.png")){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("About fired.");
+				//TODO - Implement this
 			}
 		};
 		
@@ -194,15 +194,19 @@ public class View {
 //			int option  = JOptionPane.showConfirmDialog(frame, "Would you like to save " + fileName + "?", "Save?", JOptionPane.YES_NO_CANCEL_OPTION);			
 //			switch(option){
 //				case JOptionPane.YES_OPTION:
-//					System.out.println("YEAH!");
 //					break;
 //				case JOptionPane.NO_OPTION:
-//					System.out.println("Hell, no!");
 //					break;
 //			}
 		}
 	}
 	
+	private void newTextArea(){
+		area.setText(null);
+		fileName = "Untitled";
+		frame.setTitle(TextEditor.APPNAME + " - " + fileName);
+		modified = false;
+	}
 	
 	public void updateView(String content, String fileName){
 		area.setText(content);

@@ -14,7 +14,7 @@ public class Controller {
 	}
 	
 	public void newEvent(){
-		System.out.println("Controller logging newEvent.");
+		fileManager.newEvent();
 	}
 	
 	public void openEvent(String filePath, String fileName){

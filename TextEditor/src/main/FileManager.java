@@ -34,7 +34,6 @@ public class FileManager {
 			while((tempString = br.readLine()) != null){
 				content.append(tempString + "\n");
 			}
-			
 			controller.loadFile(content.toString(), fileName);
 			this.filePath = filePath;
 		} catch (IOException e) {
@@ -52,25 +51,13 @@ public class FileManager {
 	}
 	
 	public void saveFile(String content){
-		
-	}
-	
-	public void saveAsFile(String content, String filePath){
 		try {
-//			pw = new PrintWriter(filePath + ".txt");
-//			pw.println(content);
-			
 			writer = new BufferedWriter(new FileWriter(filePath));
-		    writer.write(content);
-		    
+			writer.write(content);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		finally{
-//			if(pw != null){
-//				pw.close();
-//			}
-			
 			if(writer != null){
 				try {
 					writer.close();
@@ -79,7 +66,29 @@ public class FileManager {
 				}
 			}
 		}
-		
+	}
+	
+	public void saveAsFile(String content, String filePath){
+		try {
+			this.filePath = filePath;
+			writer = new BufferedWriter(new FileWriter(filePath));
+		    writer.write(content);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally{
+			if(writer != null){
+				try {
+					writer.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}	
+	}
+	
+	public void newEvent(){
+		filePath = null;
 	}
 	
 	public boolean fileExists(){
