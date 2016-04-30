@@ -6,12 +6,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -21,12 +25,11 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JToolBar;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileSystemView;
 import javax.swing.text.DefaultEditorKit;
 
-@SuppressWarnings({ "serial", "unused" })
+@SuppressWarnings({ "serial" })
 public class View {
 
 	private Controller controller;
@@ -37,6 +40,8 @@ public class View {
 	private JScrollPane scrollPane;
 	private JFileChooser dialog;
 	private Action saveAction, saveAsAction;
+	
+	BufferedImage newIcon, openIcon, saveIcon, helpIcon, cutIcon, copyIcon, pasteIcon;
 	
 	private boolean modified;
 	
@@ -61,8 +66,21 @@ public class View {
 		scrollPane = new JScrollPane(area, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		ActionMap am = area.getActionMap();
 		
+		try {
+			newIcon = ImageIO.read(getClass().getResource("/new-icon.png"));
+			openIcon = ImageIO.read(getClass().getResource("/open-icon.png"));
+			saveIcon = ImageIO.read(getClass().getResource("/save-icon.png"));
+			helpIcon = ImageIO.read(getClass().getResource("/coffee-icon.png"));
+			cutIcon = ImageIO.read(getClass().getResource("/cut-icon.png"));
+			copyIcon = ImageIO.read(getClass().getResource("/copy-icon.png"));
+			pasteIcon = ImageIO.read(getClass().getResource("/paste-icon.png"));
+		} catch (IOException e1) {
+			System.err.println("Class loader can't find the resource images.");
+			e1.printStackTrace();
+		}
+		
 		// Actions
-		Action newAction = new AbstractAction("New", new ImageIcon("img/new-icon.png")){
+		Action newAction = new AbstractAction("New", new ImageIcon(newIcon)){
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				newTextArea();
@@ -70,7 +88,7 @@ public class View {
 			}
 		};
 		
-		Action openAction = new AbstractAction("Open", new ImageIcon("img/open-icon.png")){
+		Action openAction = new AbstractAction("Open", new ImageIcon(openIcon)){
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(checkSaveHandled()){
@@ -82,7 +100,7 @@ public class View {
 			}
 		};
 		
-		saveAction = new AbstractAction("Save", new ImageIcon("img/save-icon.png")){
+		saveAction = new AbstractAction("Save", new ImageIcon(saveIcon)){
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(controller.fileExists()){
@@ -99,7 +117,7 @@ public class View {
 			}
 		};
 		
-		saveAsAction = new AbstractAction("SaveAs", new ImageIcon("img/save-icon.png")){
+		saveAsAction = new AbstractAction("SaveAs", new ImageIcon(saveIcon)){
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if(dialog.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION){
@@ -119,15 +137,15 @@ public class View {
 		};
 		
 		Action cutAction = am.get(DefaultEditorKit.cutAction);
-		cutAction.putValue(Action.SMALL_ICON, new ImageIcon("img/cut-icon.png"));
+		cutAction.putValue(Action.SMALL_ICON, new ImageIcon(cutIcon));
 		
 		Action copyAction =  am.get(DefaultEditorKit.copyAction);
-		copyAction.putValue(Action.SMALL_ICON, new ImageIcon("img/copy-icon.png"));
+		copyAction.putValue(Action.SMALL_ICON, new ImageIcon(copyIcon));
 		
 		Action pasteAction =  am.get(DefaultEditorKit.pasteAction);
-		pasteAction.putValue(Action.SMALL_ICON, new ImageIcon("img/paste-icon.png"));
+		pasteAction.putValue(Action.SMALL_ICON, new ImageIcon(pasteIcon));
 		
-		Action aboutAction = new AbstractAction("About TextEditor", new ImageIcon("img/coffee-icon.png")){
+		Action aboutAction = new AbstractAction("About TextEditor", new ImageIcon(helpIcon)){
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				//TODO - Implement this
@@ -143,7 +161,6 @@ public class View {
 		
 		// KeyListener to update modified boolean
 		KeyListener keyListener = new KeyAdapter(){
-
 			@Override
 			public void keyPressed(KeyEvent e) {
 				super.keyPressed(e);
@@ -176,29 +193,14 @@ public class View {
 		
 		//ToolBar
 		JToolBar toolBar = new JToolBar();
-		JButton newBtn = new JButton();
 		toolBar.add(newAction);
-		
-		JButton openBtn = new JButton();
 		toolBar.add(openAction);
-		
-		JButton saveBtn = new JButton();
 		toolBar.add(saveAction);
-		
 		toolBar.addSeparator();
-		
-		JButton cutBtn = new JButton();
 		toolBar.add(cutAction);
-		
-		JButton copyBtn = new JButton();
 		toolBar.add(copyAction);
-		
-		JButton pasteBtn = new JButton();
 		toolBar.add(pasteAction);
-		
 		toolBar.addSeparator();
-		
-		JButton coffeeBtn = new JButton();
 		toolBar.add(aboutAction);
 		
 		panel.add(toolBar, BorderLayout.NORTH);
@@ -206,9 +208,20 @@ public class View {
 		frame.setJMenuBar(menuBar);
 		frame.pack();
 		frame.setVisible(true);
+		frame.addWindowListener(new WindowAdapter(){
+			@Override
+			public void windowClosing(WindowEvent e) {
+				super.windowClosing(e);
+				if(checkSaveHandled()){
+					System.exit(0);
+				}
+			}
+		});
+		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		area.requestFocus();
 	}
 	
+	// This passes test cases but is pretty ugly and could use some refactoring.
 	public boolean checkSaveHandled(){
 		if(modified){
 			switch(JOptionPane.showConfirmDialog(frame, "Would you like to save " + fileName + "?", "Save?", JOptionPane.YES_NO_CANCEL_OPTION)) {
