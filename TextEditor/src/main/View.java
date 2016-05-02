@@ -83,10 +83,13 @@ public class View {
 		Action newAction = new AbstractAction("New", new ImageIcon(newIcon)){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				newTextArea();
-				controller.newEvent();
+				if(checkSaveHandled()){
+					newTextArea();
+					controller.newEvent();
+				}
 			}
 		};
+		newAction.putValue(AbstractAction.SHORT_DESCRIPTION, "New");
 		
 		Action openAction = new AbstractAction("Open", new ImageIcon(openIcon)){
 			@Override
@@ -99,6 +102,7 @@ public class View {
 				}
 			}
 		};
+		openAction.putValue(AbstractAction.SHORT_DESCRIPTION, "Open");
 		
 		saveAction = new AbstractAction("Save", new ImageIcon(saveIcon)){
 			@Override
@@ -116,6 +120,7 @@ public class View {
 				}
 			}
 		};
+		saveAction.putValue(AbstractAction.SHORT_DESCRIPTION, "Save");
 		
 		saveAsAction = new AbstractAction("SaveAs", new ImageIcon(saveIcon)){
 			@Override
@@ -126,6 +131,7 @@ public class View {
 				}
 			}
 		};
+		saveAsAction.putValue(AbstractAction.SHORT_DESCRIPTION, "Save As");
 		
 		Action quitAction = new AbstractAction("Quit"){
 			@Override
@@ -138,12 +144,15 @@ public class View {
 		
 		Action cutAction = am.get(DefaultEditorKit.cutAction);
 		cutAction.putValue(Action.SMALL_ICON, new ImageIcon(cutIcon));
+		cutAction.putValue(AbstractAction.SHORT_DESCRIPTION, "Cut");
 		
 		Action copyAction =  am.get(DefaultEditorKit.copyAction);
 		copyAction.putValue(Action.SMALL_ICON, new ImageIcon(copyIcon));
+		copyAction.putValue(AbstractAction.SHORT_DESCRIPTION, "Copy");
 		
 		Action pasteAction =  am.get(DefaultEditorKit.pasteAction);
 		pasteAction.putValue(Action.SMALL_ICON, new ImageIcon(pasteIcon));
+		pasteAction.putValue(AbstractAction.SHORT_DESCRIPTION, "Paste");
 		
 		Action aboutAction = new AbstractAction("About TextEditor", new ImageIcon(helpIcon)){
 			@Override
@@ -156,6 +165,7 @@ public class View {
 					    JOptionPane.INFORMATION_MESSAGE);
 			}
 		};
+		aboutAction.putValue(AbstractAction.SHORT_DESCRIPTION, "About TextEditor");
 		
 		setModified(false);
 		
