@@ -36,6 +36,7 @@ public class View {
 	private String fileName = "Untitled";
 	
 	private JFrame frame;
+	private JPanel panel;
 	private JTextArea area;
 	private JScrollPane scrollPane;
 	private JFileChooser dialog;
@@ -55,7 +56,7 @@ public class View {
 		frame = new JFrame(TextEditor.APPNAME + " - " + fileName);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		JPanel panel = (JPanel) frame.getContentPane();
+		panel = (JPanel) frame.getContentPane();
 		panel.setLayout(new BorderLayout());
 		
 		// Text Area
@@ -94,12 +95,7 @@ public class View {
 		Action openAction = new AbstractAction("Open", new ImageIcon(openIcon)){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(checkSaveHandled()){
-					if(dialog.showOpenDialog(panel)==JFileChooser.APPROVE_OPTION) {
-						controller.openEvent(dialog.getSelectedFile().getPath(), dialog.getSelectedFile().getName());
-						setModified(false);
-					}
-				}
+				openDocument();
 			}
 		};
 		openAction.putValue(AbstractAction.SHORT_DESCRIPTION, "Open");
@@ -157,7 +153,6 @@ public class View {
 		Action aboutAction = new AbstractAction("About TextEditor", new ImageIcon(helpIcon)){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				//TODO - Implement this
 				JOptionPane.showMessageDialog(frame,
 					    "TextEditor -- a simple text editor implemented in Java\n" +
 					    		"Author \t Matt Golden\nReleased under The MIT License (MIT)",
@@ -167,14 +162,18 @@ public class View {
 		};
 		aboutAction.putValue(AbstractAction.SHORT_DESCRIPTION, "About TextEditor");
 		
-		setModified(false);
-		
 		// KeyListener to update modified boolean
 		KeyListener keyListener = new KeyAdapter(){
 			@Override
 			public void keyPressed(KeyEvent e) {
 				super.keyPressed(e);
-				setModified(true);
+				if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_O){
+					System.out.println("CTRL + O");
+					openDocument();
+				}
+				else{
+					setModified(true);
+				}
 			}
 		};
 		
@@ -229,6 +228,7 @@ public class View {
 		});
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		area.requestFocus();
+		setModified(false);
 	}
 	
 	// This passes test cases but is pretty ugly and could use some refactoring.
@@ -273,5 +273,14 @@ public class View {
 		saveAction.setEnabled(modified);
 		saveAsAction.setEnabled(modified);
 		this.modified = modified;
+	}
+	
+	public void openDocument(){
+		if(checkSaveHandled()){
+			if(dialog.showOpenDialog(panel)==JFileChooser.APPROVE_OPTION) {
+				controller.openEvent(dialog.getSelectedFile().getPath(), dialog.getSelectedFile().getName());
+				setModified(false);
+			}
+		}
 	}
 }
