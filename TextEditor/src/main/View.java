@@ -28,6 +28,7 @@ import javax.swing.JToolBar;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileSystemView;
 import javax.swing.text.DefaultEditorKit;
+import javax.swing.undo.UndoManager;
 
 @SuppressWarnings({ "serial" })
 public class View {
@@ -43,6 +44,8 @@ public class View {
 	private Action saveAction, saveAsAction;
 	
 	BufferedImage newIcon, openIcon, saveIcon, helpIcon, cutIcon, copyIcon, pasteIcon;
+	
+	UndoManager undoManager;
 	
 	private boolean modified;
 	
@@ -84,10 +87,7 @@ public class View {
 		Action newAction = new AbstractAction("New", new ImageIcon(newIcon)){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(checkSaveHandled()){
-					newTextArea();
-					controller.newEvent();
-				}
+				newDocument();
 			}
 		};
 		newAction.putValue(AbstractAction.SHORT_DESCRIPTION, "New");
@@ -103,17 +103,7 @@ public class View {
 		saveAction = new AbstractAction("Save", new ImageIcon(saveIcon)){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(controller.fileExists()){
-					controller.saveEvent(area.getText());
-					setModified(false);
-				}
-				else{
-					//TODO- If you load a file and open a new one, the filename still appears in the dialog when you save
-					if(dialog.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION){
-						controller.saveAsEvent(area.getText(), dialog.getSelectedFile().getAbsolutePath());
-						setModified(false);
-					}
-				}
+				saveDocument();
 			}
 		};
 		saveAction.putValue(AbstractAction.SHORT_DESCRIPTION, "Save");
@@ -121,10 +111,11 @@ public class View {
 		saveAsAction = new AbstractAction("SaveAs", new ImageIcon(saveIcon)){
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(dialog.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION){
-					controller.saveAsEvent(area.getText(), dialog.getSelectedFile().getAbsolutePath());
-					setModified(false);
-				}
+//				if(dialog.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION){
+//					controller.saveAsEvent(area.getText(), dialog.getSelectedFile().getAbsolutePath());
+//					setModified(false);
+//				}
+				saveDocument();
 			}
 		};
 		saveAsAction.putValue(AbstractAction.SHORT_DESCRIPTION, "Save As");
@@ -162,14 +153,27 @@ public class View {
 		};
 		aboutAction.putValue(AbstractAction.SHORT_DESCRIPTION, "About TextEditor");
 		
+		
+		
 		// KeyListener to update modified boolean
 		KeyListener keyListener = new KeyAdapter(){
 			@Override
 			public void keyPressed(KeyEvent e) {
 				super.keyPressed(e);
+				if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_N){
+					newDocument();
+				}
 				if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_O){
-					System.out.println("CTRL + O");
 					openDocument();
+				}
+				if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_S){
+					saveDocument();
+				}
+				if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_Z){
+					undoManager.undo();
+				}
+				if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_Y){
+					undoManager.redo();
 				}
 				else{
 					setModified(true);
@@ -229,6 +233,10 @@ public class View {
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		area.requestFocus();
 		setModified(false);
+		
+		// Hey, let's give this a shot and see how it works:
+		undoManager = new UndoManager();
+		area.getDocument().addUndoableEditListener(undoManager);
 	}
 	
 	// This passes test cases but is pretty ugly and could use some refactoring.
@@ -264,21 +272,43 @@ public class View {
 	public void updateView(String content, String fileName){
 		area.setText(content);
 		frame.setTitle(TextEditor.APPNAME + " - " + fileName);
-		modified = false;
+		setModified(false);
 	}
 	
 	// No getter for modified.  It's fine being an inaccessible member of
 	// this class because no other class needs to use it yet.
-	public void setModified(boolean modified){
+	private void setModified(boolean modified){
 		saveAction.setEnabled(modified);
 		saveAsAction.setEnabled(modified);
 		this.modified = modified;
 	}
 	
-	public void openDocument(){
+	private void newDocument(){
+		if(checkSaveHandled()){
+			newTextArea();
+			controller.newEvent();
+			setModified(false);
+		}
+	}
+	
+	private void openDocument(){
 		if(checkSaveHandled()){
 			if(dialog.showOpenDialog(panel)==JFileChooser.APPROVE_OPTION) {
 				controller.openEvent(dialog.getSelectedFile().getPath(), dialog.getSelectedFile().getName());
+				setModified(false);
+			}
+		}
+	}
+	
+	private void saveDocument(){
+		if(controller.fileExists()){
+			controller.saveEvent(area.getText());
+			setModified(false);
+		}
+		else{
+			//TODO- If you load a file and open a new one, the filename still appears in the dialog when you save
+			if(dialog.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION){
+				controller.saveAsEvent(area.getText(), dialog.getSelectedFile().getAbsolutePath());
 				setModified(false);
 			}
 		}
